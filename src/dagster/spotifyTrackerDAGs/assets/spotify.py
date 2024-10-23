@@ -9,7 +9,8 @@ import os
 
 @asset(
         compute_kind="python",
-        description="fetch a specific playlist data from spotify api"
+        description="fetch a specific playlist data from spotify api",
+        group_name="extract_load_v1"
     )
 def get_raw_playlist_data():
     # Load environment variables from .env file
@@ -32,7 +33,11 @@ def get_raw_playlist_data():
     return raw_data
 
 
-@asset(compute_kind="python")
+@asset(
+        compute_kind="python",
+        description="basic parsing of the returned request",
+        group_name="extract_load_v1"
+    )
 def preprocess_data(get_raw_playlist_data) -> bytes:
     res = []
     for index, track in enumerate(get_raw_playlist_data['items']):
@@ -63,8 +68,12 @@ def preprocess_data(get_raw_playlist_data) -> bytes:
 # since there is many to many realtionships (authors feats), we need to
 # handle the flow with a fact table an authors table and a junction table
 # to keep the warehouse consistant. 
-@asset()
-def load_spotify_records_batch(pg_res : PgConnectionRessource, preprocess_data : bytes):
+@asset(
+    compute_kind="python",
+    description="loads the data into postgres database",
+    group_name="extract_load_v1"
+    )
+def load_spotify_records_batch(pg_res : PgConnectionRessource, preprocess_data : bytes) -> None:
     processed_data = json.loads(preprocess_data.decode('utf-8')) 
     conn = pg_res.connect_db()
     cursor = conn.cursor()
@@ -117,9 +126,3 @@ def load_spotify_records_batch(pg_res : PgConnectionRessource, preprocess_data :
     # Commit the transaction after all inserts
     conn.commit()
     cursor.close()
-
-# @job
-# def extract_load_spotify_records():
-#     raw_data = get_raw_playlist_data()
-#     processed_data = preprocess_data(raw_data)
-#     load_spotify_records_batch(processed_data=processed_data)

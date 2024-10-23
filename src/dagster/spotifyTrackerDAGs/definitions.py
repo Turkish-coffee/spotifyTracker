@@ -1,6 +1,7 @@
 
 from dagster import Definitions, load_assets_from_modules
 from .assets import spotify as spotify_assets
+from .jobs.spotify_ELT_job_v1 import spotify_data_pipeline_job_v1
 from.resources.db_conn import PgConnectionRessource
 from dotenv import load_dotenv
 import os
@@ -17,6 +18,6 @@ defs = Definitions(
                                                 user=os.getenv("POSTGRES_USER"),
                                                 password=os.getenv("POSTGRES_PASSWORD")
                                                 )},
-    jobs=[]
+    jobs=[spotify_data_pipeline_job_v1]
                 
 )
