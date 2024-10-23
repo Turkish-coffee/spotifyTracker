@@ -1,6 +1,6 @@
 from spotifyTrackerDAGs.resources.db_conn import PgConnectionRessource
 from dotenv import load_dotenv
-from dagster import asset, op, job
+from dagster import asset
 from datetime import datetime
 import uuid
 import spotipy
@@ -34,35 +34,50 @@ def get_raw_playlist_data():
 
 
 @asset(
-        compute_kind="python",
-        description="basic parsing of the returned request",
-        group_name="extract_load_v1"
-    )
-def preprocess_data(get_raw_playlist_data) -> bytes:
+    compute_kind="python",
+    description="basic parsing of the returned request",
+    group_name="extract_load_v1"
+)
+def preprocess_data(get_raw_playlist_data, pg_res: PgConnectionRessource) -> bytes:
+    conn = pg_res.connect_db()
+    cursor = conn.cursor()
+    
     res = []
     for index, track in enumerate(get_raw_playlist_data['items']):
-        processed_data = {}
-        processed_data["record_id"] = str(uuid.uuid4())
-        processed_data['batch_rank'] = int(index)
-        processed_data['created_at'] = track['added_at'] #datetime.fromisoformat(track['added_at'].replace('Z', '+00:00'))
-        processed_data['created_by'] = track['added_by']['id']
-        processed_data['album_image_url'] = track['track']['album']['images'][0]['url']
-        processed_data['album_title'] = track['track']['album']['name']
-        processed_data['album_release_date'] = track['track']['album']['release_date']
+        # Check if the track already exists and is unchanged
+        cursor.execute("""
+            SELECT 1 FROM spotify_records 
+            WHERE track_id = %s AND created_at = %s
+        """, (track['track']['id'], track['added_at']))
+        
+        # Skip if the record is unchanged
+        if cursor.fetchone():
+            continue
 
-        # Handle cases where album_release_date is just a year
-        if processed_data['album_release_date']:
-            if len(processed_data['album_release_date']) != 10:  # Year only (like "2014")
-                processed_data['album_release_date'] = f"{processed_data['album_release_date']}-01-01"  # Default to January 1st of that year
-
-        processed_data['artists'] = [artist["name"] for artist in track['track']['artists']]
-        processed_data['artists_id'] = [artist["id"] for artist in track['track']['artists']]
-        processed_data['track_id'] = track['track']['id']
-        processed_data['track_title'] = track['track']['name']
-        processed_data['track_popularity'] = track['track'].get('popularity')
-        processed_data['track_uri'] = track['track']['uri']
+        # Process new or updated record
+        processed_data = {
+            "record_id": str(uuid.uuid4()),
+            "batch_rank": int(index),
+            "created_at": track['added_at'],
+            "created_by": track['added_by']['id'],
+            "album_image_url": track['track']['album']['images'][0]['url'],
+            "album_title": track['track']['album']['name'],
+            "album_release_date": track['track']['album']['release_date'] or "Unknown",
+            "artists": [artist["name"] for artist in track['track']['artists']],
+            "artists_id": [artist["id"] for artist in track['track']['artists']],
+            "track_id": track['track']['id'],
+            "track_title": track['track']['name'],
+            "track_popularity": track['track'].get('popularity'),
+            "track_uri": track['track']['uri']
+        }
+        
         res.append(processed_data)
+    
+    cursor.close()
+    conn.close()
+    
     return json.dumps(res, indent=1, ensure_ascii=False).encode('utf-8')
+
 
 
 # since there is many to many realtionships (authors feats), we need to
@@ -72,22 +87,22 @@ def preprocess_data(get_raw_playlist_data) -> bytes:
     compute_kind="python",
     description="loads the data into postgres database",
     group_name="extract_load_v1"
-    )
-def load_spotify_records_batch(pg_res : PgConnectionRessource, preprocess_data : bytes) -> None:
+)
+def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: bytes) -> None:
     processed_data = json.loads(preprocess_data.decode('utf-8')) 
     conn = pg_res.connect_db()
     cursor = conn.cursor()
 
-    for record in processed_data: 
-        
-        # increment the fact table: spotify_records
+    for record in processed_data:
+        # Insert or update records in spotify_records
         cursor.execute(
             """
             INSERT INTO spotify_records 
-            (record_id ,record_batch_tank, created_at, created_by, album_image_url, album_title, 
-            album_release_date, track_id, track_title, 
-            track_popularity, track_uri) 
+            (record_id, record_batch_rank, created_at, created_by, album_image_url, 
+            album_title, album_release_date, track_id, track_title, track_popularity, track_uri) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (track_id) DO UPDATE 
+            SET track_title = EXCLUDED.track_title, track_popularity = EXCLUDED.track_popularity
             """,
             (
                 record['record_id'],
@@ -103,26 +118,27 @@ def load_spotify_records_batch(pg_res : PgConnectionRessource, preprocess_data :
                 record['track_uri']
             )
         )
+
+        # Upsert authors and junction table records
         for artist_name, artist_id in zip(record["artists"], record["artists_id"]):
-            # Insert artist into authors table if the artist is not already present
             cursor.execute(
                 """
                 INSERT INTO authors (author_id, author_name) 
-                SELECT %s, %s
-                WHERE NOT EXISTS (SELECT 1 FROM authors WHERE author_id = %s)
+                VALUES (%s, %s)
+                ON CONFLICT (author_id) DO NOTHING
                 """,
-                (artist_id, artist_name, artist_id)  # Use both artist_id and artist_name
+                (artist_id, artist_name)
             )
 
-            # Insert into spotifyRecordsAuthors junction table
             cursor.execute(
                 """
                 INSERT INTO spotifyRecordsAuthors (record_id, author_id) 
                 VALUES (%s, %s)
+                ON CONFLICT DO NOTHING
                 """,
                 (record['record_id'], artist_id)
             )
 
-    # Commit the transaction after all inserts
     conn.commit()
     cursor.close()
+    conn.close()
