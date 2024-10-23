@@ -1,0 +1,15 @@
+# profiles.yml
+dbt:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST') }}"         # Load from .env
+      user: "{{ env_var('POSTGRES_USER') }}"         # Load from .env
+      password: "{{ env_var('POSTGRES_PASSWORD') }}" # Load from .env
+      port: "{{ env_var('POSTGRES_PORT', default=5432) | int }}"         # Load from .env
+      dbname: "{{ env_var('POSTGRES_DB') }}"         # Load from .env
+      schema: analytics
+      threads: 4
+      keepalives_idle: 0
+      sslmode: prefer
