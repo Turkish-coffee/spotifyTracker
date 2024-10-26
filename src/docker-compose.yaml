@@ -41,8 +41,12 @@ services:
       - "3000:3000"
       - "8000:8000"
     volumes:
-      - ./dagster:/opt/dagster/dagster_home
-      - ./.env:/opt/dagster/dagster_home/.env
+      # only add the dagster core directory to avoid uncessessary files copies
+      # and preserve the advantage of code update while container runtime.
+      - ./dagster/spotifyTrackerDAGs:/opt/dagster/dagster_home/spotifyTrackerDAGs
+      # since the .env file is not changed that much we don't need to add it (only
+      # for development purposes
+      #- ./.env:/opt/dagster/dagster_home/.env
     environment:
       DAGSTER_HOME: "/opt/dagster/dagster_home"
       POSTGRES_USER: ${POSTGRES_USER}
