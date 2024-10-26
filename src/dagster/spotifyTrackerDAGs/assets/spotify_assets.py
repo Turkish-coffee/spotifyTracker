@@ -60,9 +60,10 @@ def preprocess_data(get_raw_playlist_data, pg_res: PgConnectionRessource) -> byt
             "batch_rank": int(index),
             "created_at": track['added_at'],
             "created_by": track['added_by']['id'],
+            "album_id" : track['track']['album']['id'],
             "album_image_url": track['track']['album']['images'][0]['url'],
             "album_title": track['track']['album']['name'],
-            "album_release_date": track['track']['album']['release_date'] or "Unknown",
+            "album_release_year": int(track['track']['album']['release_date'].split('-')[0]),
             "artists": [artist["name"] for artist in track['track']['artists']],
             "artists_id": [artist["id"] for artist in track['track']['artists']],
             "track_id": track['track']['id'],
@@ -94,28 +95,54 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
     cursor = conn.cursor()
 
     for record in processed_data:
+
+        # Upstert album table albums
+        cursor.execute(
+            """
+            INSERT INTO albums (album_id, album_image_url, album_title, album_release_year) 
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (album_id) DO NOTHING
+            """,
+            ( 
+                record['album_id'],
+                record['album_image_url'],
+                record['album_title'],
+                record['album_release_year'],
+            )
+        )
+
+        # Upstert track table tracks
+        cursor.execute(
+            """
+            INSERT INTO tracks (track_id, track_title, track_popularity, track_uri) 
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (track_id) DO NOTHING
+            """,
+            ( 
+                record['track_id'],
+                record['track_title'],
+                record['track_popularity'],
+                record['track_uri'],
+            )
+        )
+
         # Insert or update records in spotify_records
         cursor.execute(
             """
             INSERT INTO spotify_records 
-            (record_id, record_batch_rank, created_at, created_by, album_image_url, 
-            album_title, album_release_date, track_id, track_title, track_popularity, track_uri) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (track_id) DO UPDATE 
-            SET track_title = EXCLUDED.track_title, track_popularity = EXCLUDED.track_popularity
+            (record_id, record_batch_rank, created_at, created_by, album_id, track_id) 
+            VALUES (%s, %s, %s, %s, %s, %s)
             """,
+            #ON CONFLICT (track_id) DO UPDATE 
+            #SET track_title = EXCLUDED.track_title, track_popularity = EXCLUDED.track_popularity
+            #""",
             (
                 record['record_id'],
                 record['batch_rank'],
                 record['created_at'],
                 record['created_by'],
-                record['album_image_url'],
-                record['album_title'],
-                record['album_release_date'],
-                record['track_id'],
-                record['track_title'],
-                record['track_popularity'],
-                record['track_uri']
+                record['album_id'],
+                record['track_id']
             )
         )
 
