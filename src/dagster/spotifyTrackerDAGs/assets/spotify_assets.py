@@ -46,7 +46,7 @@ def preprocess_data(get_raw_playlist_data, pg_res: PgConnectionRessource) -> byt
     for index, track in enumerate(get_raw_playlist_data['items']):
         # Check if the track already exists and is unchanged
         cursor.execute("""
-            SELECT 1 FROM spotify_records 
+            SELECT 1 FROM spotify_core.records 
             WHERE track_id = %s AND created_at = %s
         """, (track['track']['id'], track['added_at']))
         
@@ -89,7 +89,7 @@ def preprocess_data(get_raw_playlist_data, pg_res: PgConnectionRessource) -> byt
     description="loads the data into postgres database",
     group_name="extract_load_v1"
 )
-def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: bytes) -> None:
+def load_records_batch(pg_res: PgConnectionRessource, preprocess_data: bytes) -> None:
     processed_data = json.loads(preprocess_data.decode('utf-8')) 
     conn = pg_res.connect_db()
     cursor = conn.cursor()
@@ -99,7 +99,7 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
         # Upstert album table albums
         cursor.execute(
             """
-            INSERT INTO albums (album_id, album_image_url, album_title, album_release_year) 
+            INSERT INTO spotify_core.albums (album_id, album_image_url, album_title, album_release_year) 
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (album_id) DO NOTHING
             """,
@@ -114,7 +114,7 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
         # Upstert track table tracks
         cursor.execute(
             """
-            INSERT INTO tracks (track_id, track_title, track_popularity, track_uri) 
+            INSERT INTO spotify_core.tracks (track_id, track_title, track_popularity, track_uri) 
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (track_id) DO NOTHING
             """,
@@ -126,10 +126,10 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
             )
         )
 
-        # Insert or update records in spotify_records
+        # Insert or update records in records
         cursor.execute(
             """
-            INSERT INTO spotify_records 
+            INSERT INTO spotify_core.records 
             (record_id, record_batch_rank, created_at, created_by, album_id, track_id) 
             VALUES (%s, %s, %s, %s, %s, %s)
             """,
@@ -150,7 +150,7 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
         for artist_name, artist_id in zip(record["artists"], record["artists_id"]):
             cursor.execute(
                 """
-                INSERT INTO authors (author_id, author_name) 
+                INSERT INTO spotify_core.authors (author_id, author_name) 
                 VALUES (%s, %s)
                 ON CONFLICT (author_id) DO NOTHING
                 """,
@@ -159,7 +159,7 @@ def load_spotify_records_batch(pg_res: PgConnectionRessource, preprocess_data: b
 
             cursor.execute(
                 """
-                INSERT INTO spotifyRecordsAuthors (record_id, author_id) 
+                INSERT INTO spotify_core.record_authors (record_id, author_id) 
                 VALUES (%s, %s)
                 ON CONFLICT DO NOTHING
                 """,
