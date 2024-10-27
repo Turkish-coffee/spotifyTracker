@@ -7,7 +7,8 @@ setup(
         "dagster",
         "dagster-cloud",
         "spotipy",
-        "psycopg2"
+        "psycopg2",
+        "dagster_dbt"
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )

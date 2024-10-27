@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: spotify_core
+    database: "{{ env_var('POSTGRES_DB') }}"   
+    schema: spotify_core  
+    tables:
+      - name: albums
+      - name: tracks
+      - name: records
+      - name: authors
+      - name: record_authors
