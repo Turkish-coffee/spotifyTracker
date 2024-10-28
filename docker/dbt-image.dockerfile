@@ -13,4 +13,4 @@ COPY ../src/.env /app
 
 ENV DBT_PROFILES_DIR=/app
 
-CMD ["sh", "-c", "set -a && . /app/.env && dbt run --profile dbt"]
+CMD ["sh", "-c", "set -a && . /app/.env && dbt run --target docker --profile dbt"]
