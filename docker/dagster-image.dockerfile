@@ -12,10 +12,11 @@ RUN pip install psycopg2 dagster dagster-webserver --find-links=https://github.c
 
 # Copy the dbt project files into the container
 COPY ../src/dagster /opt/dagster/dagster_home
+COPY ../src/dbt /opt/dbt
 COPY ../src/.env /opt/dagster/dagster_home
 
 RUN pip install -e .[dev]
-
+RUN . ./.env 
 
 # Default command to run Dagster UI
 CMD ["dagster", "dev", "-h", "0.0.0.0", "-p", "3000"]
