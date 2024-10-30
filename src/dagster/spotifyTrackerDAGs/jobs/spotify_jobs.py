@@ -1,4 +1,4 @@
-from dagster import define_asset_job, AssetSelection, ScheduleDefinition
+from dagster import define_asset_job, AssetSelection, ScheduleDefinition, DefaultScheduleStatus
 
 # Selecting all assets in the "spotify_data" group
 spotify_data_assets = AssetSelection.groups("extract_load_v1")
@@ -13,5 +13,6 @@ spotify_data_pipeline_job = define_asset_job(
 spotify_data_pipeline_job_schedule = ScheduleDefinition(
     job=spotify_data_pipeline_job,
     cron_schedule="0 */8 * * *",  # Runs each 8 hours
-    name="spotify_extract_load_pipeline_job_schedule"
+    name="spotify_extract_load_pipeline_job_schedule",
+    default_status=DefaultScheduleStatus("RUNNING")
 )
