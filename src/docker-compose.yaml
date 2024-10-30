@@ -46,8 +46,10 @@ services:
       # only add the dagster core directory to avoid uncessessary files copies
       # and preserve the advantage of code update while container runtime.
       - ./dagster/spotifyTrackerDAGs:/opt/dagster/dagster_home/spotifyTrackerDAGs
-
+      #- ./dbt:/opt/dbt
       - ./dbt/models:/opt/dbt/models
+      - ./dbt/profiles.yml:/opt/dbt/profiles.yml
+      - ./dbt/dbt_project.yml:/opt/dbt/dbt_project.yml
       # since the .env file is not changed that much we don't need to add it (only
       # for development purposes
       #- ./.env:/opt/dagster/dagster_home/.env
