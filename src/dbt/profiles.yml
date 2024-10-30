@@ -1,6 +1,6 @@
 # profiles.yml
 dbt:
-  target: dev
+  target: docker
   outputs:
     docker:
       type: postgres
