@@ -5,8 +5,131 @@ sources:
     database: "{{ env_var('POSTGRES_DB') }}"   
     schema: spotify_core  
     tables:
+
       - name: albums
+
+        description: >
+          albums related to the spotify records.
+        columns:
+          - name: album_id
+            description: Primary key of the albums table
+            tests:
+              - unique
+              - not_null
+
+          - name: album_image_url
+            description: url of the album's image in 640 x 640 px
+
+          - name: album_title
+            description: title of the album related to the spotify record
+            tests:
+              - not_null
+
+          - name: album_release_year
+            description: release year of the album related to the spotify record
+
       - name: tracks
+
+        description: >
+          tracks related to the spotify records.
+        columns:
+          - name: track_id
+            description: Primary key of the orders table
+            tests:
+              - unique
+              - not_null
+
+          - name: track_title
+            description: title of the track
+
+          - name: track_popularity
+            description: number between 1 and 100 indicating the popularity of the track among the album
+
+          - name: track_uri
+            description: spotify uri of the track
+
       - name: records
+
+        description: >
+          records fetched from the spotify API
+        columns:
+          - name: record_id
+            description: Primary key of the orders table
+            tests:
+              - unique
+              - not_null
+
+          - name: record_batch_rank
+            description: order of the record in the record_batch (daily)
+            tests:
+              - not_null
+
+          - name: created_at
+            description: created_at
+            tests:
+              - not_null
+
+          - name: created_by
+            description: username of the person adding the record (collaborative playlist)
+            tests:
+              - not_null
+
+          - name: album_id
+            description: foreign key referencing the albums table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('spotify_core','albums')
+                  field: album_id
+          
+          - name: track_id
+            description: foreign key referencing the tracks table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('spotify_core','tracks')
+                  field: track_id
+
       - name: authors
+
+        description: >
+          authors of the tracks recorded.
+        columns:
+          - name: author_id
+            description: Primary key of the authors table
+            tests:
+              - unique
+              - not_null
+
+          - name: author_name
+            description: name of the authors
+            tests:
+              - not_null
+
+
       - name: record_authors
+
+        description: >
+          junction table which ties records and authors table
+        columns:
+          - name: id
+            description: Primary key of the record_authors table
+            tests:
+              - unique
+              - not_null
+
+          - name: record_id
+            description: foreign key referencing the records table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('spotify_core','records')
+                  field: record_id
+          
+          - name: author_id
+            description: foreign key referencing the authors table
+            tests:
+              - not_null
+              - relationships:
+                  to: source('spotify_core','authors')
+                  field: author_id
