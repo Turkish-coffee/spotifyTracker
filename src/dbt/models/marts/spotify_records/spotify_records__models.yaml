@@ -1,0 +1,181 @@
+models:
+  - name: spotify_records__playlist_daily
+    config:
+      materialized: view
+    columns:
+      - name: record_id
+        description: This is the primary key
+        data_type: varchar
+
+      - name: record_batch_rank
+        description: xxx
+        data_type: int
+      
+      - name: created_at
+        description: xxx
+        data_type: timestamp
+      
+      - name: created_by
+        description: xxx
+        data_type: timestamp
+      
+      - name: album_id
+        description: xxx
+        data_type: varchar
+      
+      - name: track_id
+        description: xxx
+        data_type: varchar
+      
+      - name: album_image_url
+        description: xxx
+        data_type: varchar
+      
+      - name: album_title
+        description: xxx
+        data_type: varchar
+      
+      - name: album_release_year
+        description: xxx
+        data_type: int
+      
+      - name: author_id
+        description: xxx
+        data_type: varchar
+      
+      - name: author_name
+        description: xxx
+        data_type: varchar
+      
+      - name: track_title
+        description: xxx
+        data_type: varchar
+      
+      - name: track_popularity
+        description: xxx
+        data_type: int
+      
+      - name: track_uri
+        description: xxx
+        data_type: varchar
+
+
+  - name: spotify_records__playlist_weekly
+    config:
+      materialized: view
+    columns:
+      - name: record_id
+        description: This is the primary key
+        data_type: varchar
+
+      - name: record_batch_rank
+        description: xxx
+        data_type: int
+      
+      - name: created_at
+        description: xxx
+        data_type: timestamp
+      
+      - name: created_by
+        description: xxx
+        data_type: timestamp
+      
+      - name: album_id
+        description: xxx
+        data_type: varchar
+      
+      - name: track_id
+        description: xxx
+        data_type: varchar
+      
+      - name: album_image_url
+        description: xxx
+        data_type: varchar
+      
+      - name: album_title
+        description: xxx
+        data_type: varchar
+      
+      - name: album_release_year
+        description: xxx
+        data_type: int
+      
+      - name: author_id
+        description: xxx
+        data_type: varchar
+      
+      - name: author_name
+        description: xxx
+        data_type: varchar
+      
+      - name: track_title
+        description: xxx
+        data_type: varchar
+      
+      - name: track_popularity
+        description: xxx
+        data_type: int
+      
+      - name: track_uri
+        description: xxx
+        data_type: varchar
+
+  - name: spotify_records__playlist_monthly
+    config:
+      materialized: view
+    columns:
+      - name: record_id
+        description: This is the primary key
+        data_type: varchar
+
+      - name: record_batch_rank
+        description: xxx
+        data_type: int
+      
+      - name: created_at
+        description: xxx
+        data_type: timestamp
+      
+      - name: created_by
+        description: xxx
+        data_type: timestamp
+      
+      - name: album_id
+        description: xxx
+        data_type: varchar
+      
+      - name: track_id
+        description: xxx
+        data_type: varchar
+      
+      - name: album_image_url
+        description: xxx
+        data_type: varchar
+      
+      - name: album_title
+        description: xxx
+        data_type: varchar
+      
+      - name: album_release_year
+        description: xxx
+        data_type: int
+      
+      - name: author_id
+        description: xxx
+        data_type: varchar
+      
+      - name: author_name
+        description: xxx
+        data_type: varchar
+      
+      - name: track_title
+        description: xxx
+        data_type: varchar
+      
+      - name: track_popularity
+        description: xxx
+        data_type: int
+      
+      - name: track_uri
+        description: xxx
+        data_type: varchar

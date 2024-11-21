@@ -1,0 +1,93 @@
+models:
+  - name: stg_spotify_core__records
+    config:
+      materialized: view
+    columns:
+      - name: record_id
+        description: This is the primary key
+        data_type: varchar
+
+      - name: record_batch_rank
+        description: xxx
+        data_type: int
+      
+      - name: created_at
+        description: xxx
+        data_type: timestamp
+      
+      - name: created_by
+        description: xxx
+        data_type: timestamp
+      
+      - name: album_id
+        description: xxx
+        data_type: varchar
+      
+      - name: track_id
+        description: xxx
+        data_type: varchar
+
+  - name: stg_spotify_core__albums
+    config:
+      materialized: view
+    columns:
+      - name: album_image_url
+        description: xxx
+        data_type: varchar
+      
+      - name: album_title
+        description: xxx
+        data_type: varchar
+      
+      - name: album_release_year
+        description: xxx
+        data_type: int
+      
+  - name: stg_spotify_core__authors
+    config:
+      materialized: view
+    columns:
+
+      - name: author_id
+        description: xxx
+        data_type: varchar
+      
+      - name: author_name
+        description: xxx
+        data_type: varchar
+      
+
+  - name: stg_spotify_core__tracks
+    config:
+      materialized: view
+    columns:
+
+      - name: track_title
+        description: xxx
+        data_type: varchar
+      
+      - name: track_popularity
+        description: xxx
+        data_type: int
+      
+      - name: track_uri
+        description: xxx
+        data_type: varchar
+
+
+  - name: stg_spotify_core__record_authors
+    config:
+      materialized: view
+    columns:
+
+      - name: id
+        description: xxx
+        data_type: int
+      
+      - name: record_id
+        description: xxx
+        data_type: varchar
+      
+      - name: author_id
+        description: xxx
+        data_type: varchar
